@@ -1,40 +1,93 @@
-import React, { useState } from "react";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { base_url } from "../../constant";
 
 const UniversityForm = () => {
   const initialFormData = {
-    images: null, // Store file paths instead of files
+    images: null,
     name: "",
     country: "",
-    city:"",
+    city: "",
   };
   const [univerSityformData, setUniverSityFormData] = useState(initialFormData);
+  const [cityData, setCityData] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUniverSityFormData({
-      ...univerSityformData,
-      [name]: value,
-    });
+
+    if (name === "city") {
+      const selectedCity = cityData.find((city) => city.name === value);
+      setUniverSityFormData({
+        ...univerSityformData,
+        [name]: value,
+        country: selectedCity?.country || "", // Update country based on selected city
+      });
+    } else {
+      setUniverSityFormData({
+        ...univerSityformData,
+        [name]: value,
+      });
+    }
   };
 
   const handleSingleImageUpload = (e) => {
     const file = e.target.files[0];
-    const path = URL.createObjectURL(file); // Get file path
     setUniverSityFormData({
       ...univerSityformData,
-      images: path, // Store single file path
+      images: file,
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleGetCityList = async () => {
+    try {
+      const res = await axios.get(`${base_url}/city`);
+      const cityData = res?.data?.data?.map((item) => ({
+        id: item.name,
+        name: item.name,
+        country: item.country,
+      }));
+      setCityData(cityData);
+    } catch (error) {
+      console.log(error?.response);
+    }
+  };
+
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    // Handle form submission, you can send formData to backend or perform any other actions here
+    const accessToken = localStorage.getItem('x-access-token');
+    const refreshToken = localStorage.getItem('x-refresh-token');
+
+    const formDataToSend = new FormData();
+
+    formDataToSend.append('name', univerSityformData.name);
+    formDataToSend.append('city', univerSityformData.city);
+    formDataToSend.append('country',univerSityformData.country);
+    formDataToSend.append('logo',univerSityformData.images)
+    try {
+      const response = await axios.post(`${base_url}/university`, formDataToSend, {
+        headers: {
+            'x-access-token': accessToken,
+            'x-refresh-token': refreshToken,
+            'Content-Type': 'multipart/form-data' 
+        }
+    });
+    
+
+    console.log('Form data sent successfully:', response.data);
+        setUniverSityFormData(initialFormData);
+    } catch (error) {
+      console.log(error)
+    }
     console.log(univerSityformData);
   };
-  
+
   const handleClear = () => {
-    setUniverSityFormData(initialFormData); // Reset the form data to initial values
+    setUniverSityFormData(initialFormData);
   };
+
+  useEffect(() => {
+    handleGetCityList();
+  }, []);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -91,14 +144,20 @@ const UniversityForm = () => {
               <label htmlFor="city">City:</label>
             </td>
             <td>
-              <input
-                type="text"
+              <select
                 id="city"
                 name="city"
                 value={univerSityformData.city}
                 onChange={handleChange}
                 required
-              />
+              >
+                <option value="">Select a city</option>
+                {cityData.map((city) => (
+                  <option key={city.id} value={city.name}>
+                    {city.name}
+                  </option>
+                ))}
+              </select>
             </td>
           
          

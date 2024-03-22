@@ -1,32 +1,17 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import FirstNavbar from "../dashboard/FirstNavbar";
 import SideBar from "../dashboard/SideBar";
+import axios from 'axios';
+import { base_url } from '../../constant';
+import { Button, Card, Table } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
 const Booking = () => {
-  // Sample data
-  const bookingsData = [
-    { bookingId: 1, cityName: 'New York', customerName: 'John Doe' },
-    { bookingId: 2, cityName: 'London', customerName: 'Jane Smith' },
-    { bookingId: 3, cityName: 'Paris', customerName: 'Michael Johnson' },
-    { bookingId: 4, cityName: 'Tokyo', customerName: 'Emily Brown' },
-    { bookingId: 5, cityName: 'Sydney', customerName: 'David Wilson' },
-    { bookingId: 6, cityName: 'Berlin', customerName: 'Sarah Davis' },
-    { bookingId: 7, cityName: 'Rome', customerName: 'Alex Harris' },
-    { bookingId: 8, cityName: 'Moscow', customerName: 'Sophia Martinez' },
-    { bookingId: 9, cityName: 'Dubai', customerName: 'Matthew Anderson' },
-    { bookingId: 10, cityName: 'Beijing', customerName: 'Olivia Taylor' }
-  ];
+ 
+  const navigate=useNavigate();
+  useEffect(()=>{
+  },[])
 
-  // Mapping function to render booking cards
-  const renderBookingCards = () => {
-    return bookingsData.map(booking => (
-      <div key={booking.bookingId} className="booking-card">
-        <h3>Booking ID: {booking.bookingId}</h3>
-        <p>City: {booking.cityName}</p>
-        <p>Customer: {booking.customerName}</p>
-      </div>
-    ));
-  };
 
   return (
     <div>
@@ -35,10 +20,41 @@ const Booking = () => {
       </div>
       <div className="content">
         <div className="container">
-          <FirstNavbar />
-          <div className="booking-cards-container">
-            {renderBookingCards()}
-          </div>
+          <FirstNavbar /> 
+          <div class="container text-center">
+                <div class="row justify-content-start">
+                    <div className="d-flex justify-content-around">
+
+                        <Button bg='dark' variant="light" onClick={()=>{navigate('/currentBookings')}}>
+                            <Card style={{ width: '18rem' }}>
+                                <Card.Img variant="top" src="https://play-lh.googleusercontent.com/vtF2gcADW6O7qnzipftCyGOyaB4pb12bjl4sMBcZp3KOOdf8DdHUJDVx0JeNeuT7nh3A" />
+                                <Card.Body>
+                                    <Card.Title>Current Bookings</Card.Title>
+                                </Card.Body>
+                            </Card>
+                        </Button>
+
+                        <Button bg='dark' variant="light" onClick={()=>{navigate('/ongoingBookings')}}>
+                            <Card style={{ width: '18rem' }}>
+                                <Card.Img variant="top" src="https://play-lh.googleusercontent.com/vtF2gcADW6O7qnzipftCyGOyaB4pb12bjl4sMBcZp3KOOdf8DdHUJDVx0JeNeuT7nh3A" />
+                                <Card.Body>
+                                    <Card.Title>Ongoing Bookings</Card.Title>
+                                </Card.Body>
+                            </Card>
+                        </Button>
+
+                        <Button bg='dark' variant="light" onClick={()=>{navigate('/pastBookings')}}>
+                            <Card style={{ width: '18rem' }}>
+                                <Card.Img variant="top" src="https://play-lh.googleusercontent.com/vtF2gcADW6O7qnzipftCyGOyaB4pb12bjl4sMBcZp3KOOdf8DdHUJDVx0JeNeuT7nh3A" />
+                                <Card.Body>
+                                    <Card.Title>Past   Bookings</Card.Title>
+                                </Card.Body>
+                            </Card>
+                        </Button>
+
+                    </div>
+                </div>
+            </div>
         </div>
       </div>
     </div>

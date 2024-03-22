@@ -7,6 +7,8 @@ import { ToastContainer, toast, Zoom } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 import { Spinner } from "react-bootstrap";
+import axios from "axios";
+import { base_url } from "../../constant";
 
 
 
@@ -36,7 +38,7 @@ const Login = () => {
     const { email, password } = loginForm
     const newErrors = {}
     if (!email) {
-      newErrors.email = 'please enter user name'
+      newErrors.email = 'please enter user email'
     }
     else if (email && !regText.test(email)) {
       newErrors.email = 'user name should be text'
@@ -55,56 +57,39 @@ const Login = () => {
   }
 
   // eugia$#@!345
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     const handleValidationObject = handleValidation()
     if (Object.keys(handleValidationObject).length > 0) {
       setLoginFormErrors(handleValidationObject)
     } else {
-      setLoader(true)
-      const username = 'application'
-      const password = 'secret'
-      const data = "password"
-      let obj = `grant_type=${data}&username=${loginForm.email}&password=${loginForm.password}`
-      const requestOptions = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: 'Basic ' + btoa(`${username}:${password}`)
-        },
-        body: obj
-      };
-      fetch('https://eugia-api.moshimoshi.cloud/api/eugia/oauth/token', requestOptions)
-        .then(response => response.json())
-        .then(data => {
-          setLoader(true)
-          if (data.status == 400) {
-            toast.error('user credentials are invalid')
-            setTimeout(() => {
-              setLoader(false)
-            }, [1000])
-          } else {
-            localStorage.setItem('userDetails', JSON.stringify(data));
-            toast.success('Login Success Fully')
-            setLoader(true)
-            setLoginForm({
-              ...loginForm,
-              email: '',
-              password: ''
-            })
-            setTimeout(() => {
-              navigate('/dashboard');
-            }, 1000);
-          }
-        }
-        ).catch((err) => {
-          setLoginForm({
-            ...loginForm,
-            email: '',
-            password: ''
-          })
+      // setLoader(true)
+     
+      try {
+        const response = await axios.post(`${base_url}/admin/login`,{
+          email:loginForm.email,
+          password:loginForm.password
         })
+        if (response.status === 201) {
+          const headers = response.headers;
+          localStorage.setItem('x-access-token',headers["x-access-token"]);
+          localStorage.setItem("x-refresh-token",headers["x-refresh-token"]);
+          // console.log(response?.data.user.email)  
+        } 
+
+        navigate('/dashboard');
+        
+        // alert('Loged in')
+      } catch (error) {
+        // alert(error?.response?.error)
+        console.log(error?.response?.data?.message)
+        alert(error?.response?.data?.message)
+      }
     }
+
   }
+
+  //               
+
   return (
     <div>
       {" "}

@@ -1,185 +1,112 @@
-import React, { useState } from "react";
-import Minus from "./../../assets/images/minus.jpg";
-import Plus from "./../../assets/images/plus.png";
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { base_url } from '../../constant';
 
 const PropertyForm = () => {
-  const initialFormData = {
-    images: [], // Store file paths instead of files
-    name: "",
-    type:"",
-    buildingType:"",
-    bedroom:"",
-    bath:"",
-    resident:"",
-    size:"",
-    minStay:"",
-    price:"",
-    ameinties:"",
-    city:"",
-    country: "",
-    area: "",
-    locationDescription:"",
-    areaMapLink:"",
-    exactMapLink:"",
-    threeTour:"",
-    floorPlan:"",
-    ttkVideo:"",
-    ttkMessage:"",
-    universityAssociated:"",
-    serviceFree:"",
-    mapCordinates:"",
-    longitude:"",
-    latitude:""
-  };
-  const [formData, setFormData] = useState(initialFormData);
-  const [formErrors, setFormErrors] = useState({});
+  const [selectedUniversityIds, setSelectedUniversityIds] = useState([]);
+  const [formData, setFormData] = useState({
+    photos: [],
+    name: '',
+    type: '',
+    buildingType: '',
+    bedroom: 0,
+    bath: 0,
+    resident: 0,
+    size: 0,
+    minStay: 0,
+    price: 0,
+    amenities: [],
+    city: '',
+    country: '',
+    area: '',
+    locationDescription: '',
+    threeTour: '',
+    floorPlan: '',
+    ttkMessage: '',
+    ttkVideo: '',
+    universityAssociated: [],
+    serviceFee: '',
+    longitude: 0,
+    latitude: 0,
+  });
 
-  const validateForm = () => {
-    let errors = {};
-    let isValid = true;
-  
-    if (!formData.name) {
-      errors.name = "Name is required";
-      isValid = false;
-    }
-  
-    if (!formData.type) {
-      errors.type = "Type is required";
-      isValid = false;
-    }
-  
-    if (!formData.buildingType) {
-      errors.buildingType = "Building Type is required";
-      isValid = false;
-    }
-  
-    if (!formData.bedroom) {
-      errors.bedroom = "Bedroom is required";
-      isValid = false;
-    }
-  
-    if (!formData.bath) {
-      errors.bath = "Bath is required";
-      isValid = false;
-    }
-  
-    if (!formData.resident) {
-      errors.resident = "Resident is required";
-      isValid = false;
-    }
-  
-    if (!formData.size) {
-      errors.size = "Size is required";
-      isValid = false;
-    }
-  
-    if (!formData.minStay) {
-      errors.minStay = "Min Stay is required";
-      isValid = false;
-    }
-  
-    if (!formData.price) {
-      errors.price = "Price is required";
-      isValid = false;
-    }
-  
-    if (!formData.ameinties) {
-      errors.ameinties = "Amenities are required";
-      isValid = false;
-    }
-  
-    if (!formData.city) {
-      errors.city = "City is required";
-      isValid = false;
-    }
-  
-    if (!formData.country) {
-      errors.country = "Country is required";
-      isValid = false;
-    }
-  
-    if (!formData.area) {
-      errors.area = "Area is required";
-      isValid = false;
-    }
-  
-    if (!formData.locationDescription) {
-      errors.locationDescription = "Location Description is required";
-      isValid = false;
-    }
-  
-    if (!formData.areaMapLink) {
-      errors.areaMapLink = "Area Map Link is required";
-      isValid = false;
-    }
-  
-    if (!formData.exactMapLink) {
-      errors.exactMapLink = "Exact Map Link is required";
-      isValid = false;
-    }
-  
-    if (!formData.threeTour) {
-      errors.threeTour = "Three Tour is required";
-      isValid = false;
-    }
-  
-    if (!formData.floorPlan) {
-      errors.floorPlan = "Floor Plan is required";
-      isValid = false;
-    }
-  
-    if (!formData.ttkVideo) {
-      errors.ttkVideo = "TTK Video is required";
-      isValid = false;
-    }
-  
-    if (!formData.ttkMessage) {
-      errors.ttkMessage = "TTK Message is required";
-      isValid = false;
-    }
-  
-    if (!formData.universityAssociated) {
-      errors.universityAssociated = "University Associated is required";
-      isValid = false;
-    }
-  
-    if (!formData.serviceFree) {
-      errors.serviceFree = "Service Free is required";
-      isValid = false;
-    }
-  
-    if (!formData.mapCordinates) {
-      errors.mapCordinates = "Map Coordinates is required";
-      isValid = false;
-    }
-  
-    if (!formData.longitude) {
-      errors.longitude = "Longitude is required";
-      isValid = false;
-    }
-  
-    if (!formData.latitude) {
-      errors.latitude = "Latitude is required";
-      isValid = false;
-    }
-  
-    setFormErrors(errors);
-    return isValid;
-  };
-  
+  const [cities, setCities] = useState([]);
+  const [universities, setUniversities] = useState([]);
+  const [cityId, setCityId] = useState('');
+
   const handleChange = (e) => {
-    const { name } = e.target;
-    let value = e.target.value;
-  
-    // For file inputs, use e.target.files to access the selected file(s)
-    if (e.target.type === 'file') {
-      value = e.target.files[0]; // Assuming you only allow selecting one file
+    const { name, value, type, files } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: type === 'file' ? files : value,
+    }));
+  };
+
+  const handleCityChange = (item, key) => {
+    setCityId(cities[key - 1].id)
+    console.log(cities[key - 1].id, "Key")
+    console.log(key)
+    setFormData((prevData) => ({
+      ...prevData,
+      ['city']: item,
+      ['country']: cities[key - 1].country
+    }))
+  }
+
+  const handleAmenitiesChange = (e) => {
+    const amenities = e.target.value.split(',').map((amenity) => amenity.trim());
+    setFormData((prevData) => ({
+      ...prevData,
+      amenities,
+    }));
+  };
+
+  const handleUniversityAssociatedChange = (e) => {
+    const { value, checked } = e.target;
+    const universityId = universities.find(uni => uni.name === value)?.id;
+
+    if (checked) {
+      setFormData(prevData => ({
+        ...prevData,
+        universityAssociated: [...prevData.universityAssociated, value]
+      }));
+      setSelectedUniversityIds(prevIds => [...prevIds, universityId]);
+    } else {
+      setFormData(prevData => ({
+        ...prevData,
+        universityAssociated: prevData.universityAssociated.filter(uni => uni !== value)
+      }));
+      setSelectedUniversityIds(prevIds => prevIds.filter(id => id !== universityId));
     }
-  
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    console.log(selectedUniversityIds,"Uni")
+  };
+
+  const handleGetCityList = async () => {
+    try {
+      const res = await axios.get(`${base_url}/city`);
+      const cityData = res?.data?.data?.map((item) => ({
+        id: item.id,
+        name: item.name,
+        country: item.country,
+      }));
+      setCities(cityData);
+
+    } catch (error) {
+      console.log(error?.response);
+    }
+  };
+
+  const handleGetUniversityList = async () => {
+    try {
+      const res = await axios.get(`${base_url}/university`);
+      const uniData = res?.data?.data?.map((item) => ({
+        id: item.id,
+        name: item.name,
+      }));
+      setUniversities(uniData)
+    } catch (error) {
+      console.log(error?.response);
+    }
   };
 
   const handleImageUpload = (e) => {
@@ -187,482 +114,174 @@ const PropertyForm = () => {
     const paths = files.map((file) => URL.createObjectURL(file)); // Get file paths
     setFormData((prevState) => ({
       ...prevState,
-      images: [...prevState.images, ...paths], // Append new paths to existing ones
+      photos: [...prevState.photos, ...files], // Append new files to existing ones
     }));
   };
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    handleGetCityList();
+    handleGetUniversityList();
+  }, [])
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log( formErrors, "this is working");
-    if (validateForm()) {
-      // Handle form submission, you can send formData to backend or perform any other actions here
-      console.log(formData);
-      // Reset form after successful submission
-      setFormData(initialFormData);
-      console.log(formData);
+    // Here, you can send the formData to the server or perform any other desired actions
+    const formDataToSend = new FormData();
+
+    for (const [key, value] of Object.entries(formData)) {
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          formDataToSend.append(key, item);
+        }
+      } else {
+        formDataToSend.append(key, value);
+      }
     }
+
+    
+    Array.from(formData.photos).forEach((image, index) => {
+      formDataToSend.append('photos', image);
+      console.log(formDataToSend.photos)
+    });
+
+    formDataToSend.set('city', cityId)
+    formDataToSend.set('universityAssociated',JSON.stringify(selectedUniversityIds))
+    formDataToSend.set('ameinties',JSON.stringify(formData.amenities))
+    console.log(formData.floorPlan[0],"Three tour")
+    formDataToSend.set('threeTour',formData?.threeTour[0])
+    formDataToSend.set('floorPlan',formData?.floorPlan[0])
+    formDataToSend.set('ttkVideo',formData?.ttkVideo[0])
+
+    const accessToken = localStorage.getItem('x-access-token');
+    const refreshToken = localStorage.getItem('x-refresh-token');
+
+    try {
+      const res = await axios.post(`${base_url}/property`, formDataToSend, {
+        headers: {
+          'x-access-token': accessToken,
+          'x-refresh-token': refreshToken,
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      console.log(res.data, "Data")
+    } catch (error) {
+      console.log(error)
+    }
+    console.log(formData);
   };
 
+  return (
+    <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', gap: '10px' }}>
 
-  const handleClear = () => {
-    setFormData(initialFormData); // Reset the form data to initial values
-    setFormErrors({});
-  };
 
-    return (
-      <form >
-        <table>
-          <tbody>
-          <tr>
-          <td>
-            <label htmlFor="images">Images:</label>
-          </td>
-          <td>
-            <input
-              type="file"
-              multiple
-              id="images"
-              name="images"
-              accept="image/*"
-              onChange={handleImageUpload}
-              required
-            />
-            <div>
-              {formData.images.map((path, index) => (
-                <img
-                  key={index}
-                  src={path}
-                  alt={`Image ${index}`}
-                  style={{
-                    maxWidth: "140px",
-                    maxHeight: "140px",
-                    margin: "5px",
-                  }}
-                />
-              ))}
-            </div>
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="name">Name:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              placeholder="John Doe"
-              value={formData.name}
-              onChange={(e) => handleChange(e)}
-              required
-            />
-            {formErrors.name && <span style={{ color: "red" }}>{formErrors.name}</span>}
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="type">Type:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="type"
-              name="type"
-              placeholder="Type"
-              value={formData.type}
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="buildingType">Building Type:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="buildingType"
-              name="buildingType"
-              placeholder="Building Type"
-              value={formData.buildingType}
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="bedroom">Bedroom:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="bedroom"
-              name="bedroom"
-              placeholder="Bedroom"
-              value={formData.bedroom}
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="bath">Bath:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="bath"
-              name="bath"
-              placeholder="Bath"
-              value={formData.bath}
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="resident">Resident:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="resident"
-              name="resident"
-              placeholder="Resident"
-              value={formData.resident}
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="size">Size:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="size"
-              name="size"
-              placeholder="Size"
-              value={formData.size}
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="minStay">Min Stay:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="minStay"
-              name="minStay"
-              placeholder="Min Stay"
-              value={formData.minStay}
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="price">Price:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="price"
-              name="price"
-              placeholder="Price"
-              value={formData.price}
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="ameinties">Amenities:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="ameinties"
-              name="ameinties"
-              placeholder="Amenities"
-              value={formData.ameinties}
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="city">City:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="city"
-              name="city"
-              placeholder="City"
-              value={formData.city}
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="country">Country:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="country"
-              name="country"
-              placeholder="Country"
-              value={formData.country}
-              onChange={(e) => handleChange(e)}
-              required
-            />
-            {formErrors.country && <span style={{ color: "red" }}>{formErrors.country}</span>}
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="area">Area:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="area"
-              name="area"
-              placeholder="Area"
-              value={formData.area}
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="locationDescription">Location Description:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="locationDescription"
-              name="locationDescription"
-              placeholder="Location Description"
-              value={formData.locationDescription}
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="areaMapLink">Area Map Link:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="areaMapLink"
-              name="areaMapLink"
-              placeholder="Area Map Link"
-              value={formData.areaMapLink}
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="exactMapLink">Exact Map Link:</label>
-          </td>
-          <td>
-            <input
-              type="text"
-              id="exactMapLink"
-              name="exactMapLink"
-              placeholder="Exact Map Link"
-              value={formData.exactMapLink}
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-          <td>
-            <label htmlFor="threeTour">Three Tour:</label>
-          </td>
-          <td>
-            <input
-              type="file"
-              id="threeTour"
-              name="threeTour"
-              placeholder="Three Tour"
-              onChange={(e) => handleChange(e)}
-            />
-          </td>
-        </tr>
-        
-        <tr>
-        <td>
-          <label htmlFor="floorPlan">Floor Plan:</label>
-        </td>
-        <td>
-          <input
-            type="file"
-            id="floorPlan"
-            name="floorPlan"
-            placeholder="Floor Plan"
-            onChange={(e) => handleChange(e)}
-          />
-        </td>
-      </tr>
-      
-      <tr>
-        <td>
-          <label htmlFor="ttkVideo">Ttk Video:</label>
-        </td>
-        <td>
-          <input
-            type="file"
-            id="ttkVideo"
-            name="ttkVideo"
-            placeholder="Ttk Video"
-            onChange={(e) => handleChange(e)}
-          />
-        </td>
-      </tr>
-      
-      <tr>
-        <td>
-          <label htmlFor="ttkMessage">Ttk Message:</label>
-        </td>
-        <td>
-          <input
-            type="text"
-            id="ttkMessage"
-            name="ttkMessage"
-            placeholder="Ttk Message"
-            value={formData.ttkMessage}
-            onChange={(e) => handleChange(e)}
-          />
-        </td>
-      </tr>
-      
-      <tr>
-        <td>
-          <label htmlFor="universityAssociated">University Associated:</label>
-        </td>
-        <td>
-          <input
-            type="text"
-            id="universityAssociated"
-            name="universityAssociated"
-            placeholder="University Associated"
-            value={formData.universityAssociated}
-            onChange={(e) => handleChange(e)}
-          />
-        </td>
-      </tr>
-      
-      <tr>
-        <td>
-          <label htmlFor="serviceFree">Service Free:</label>
-        </td>
-        <td>
-          <input
-            type="text"
-            id="serviceFree"
-            name="serviceFree"
-            placeholder="Service Free"
-            value={formData.serviceFree}
-            onChange={(e) => handleChange(e)}
-          />
-        </td>
-      </tr>
-      
-      <tr>
-        <td>
-          <label htmlFor="mapCordinates">Map Coordinates:</label>
-        </td>
-        <td>
-          <input
-            type="text"
-            id="mapCordinates"
-            name="mapCordinates"
-            placeholder="Map Coordinates"
-            value={formData.mapCordinates}
-            onChange={(e) => handleChange(e)}
-          />
-        </td>
-      </tr>
-      
-      <tr>
-        <td>
-          <label htmlFor="longitude">Longitude:</label>
-        </td>
-        <td>
-          <input
-            type="text"
-            id="longitude"
-            name="longitude"
-            placeholder="Longitude"
-            value={formData.longitude}
-            onChange={(e) => handleChange(e)}
-          />
-        </td>
-      </tr>
-      
-      <tr>
-        <td>
-          <label htmlFor="latitude">Latitude:</label>
-        </td>
-        <td>
-          <input
-            type="text"
-            id="latitude"
-            name="latitude"
-            placeholder="Latitude"
-            value={formData.latitude}
-            onChange={(e) => handleChange(e)}
-          />
-        </td>
-      </tr>
-      
-        
+      <label htmlFor="photos">Photos:</label>
+      <input type="file" name="photos" id="photos" multiple onChange={handleImageUpload} />
 
-            <tr>
-              <td>
-                <button className="submit_city" onClick={handleSubmit}>
-                  Submit
-                </button>
-              </td>
-              <td>
-                <button className="cancel_city" type="button" onClick={handleClear}>
-                  Cancel
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </form>
-    );
-  };
+      <label htmlFor="name">Name:</label>
+      <input type="text" name="name" id="name" value={formData.name} onChange={handleChange} />
 
-  export default PropertyForm;
+      <label htmlFor="type">Type:</label>
+      <input type="text" name="type" id="type" value={formData.type} onChange={handleChange} />
+
+      <label htmlFor="buildingType">Building Type:</label>
+      <input type="text" name="buildingType" id="buildingType" value={formData.buildingType} onChange={handleChange} />
+
+      <label htmlFor="bedroom">Bedrooms:</label>
+      <input type="number" name="bedroom" id="bedroom" value={formData.bedroom} onChange={handleChange} />
+
+      <label htmlFor="bath">Bathrooms:</label>
+      <input type="number" name="bath" id="bath" value={formData.bath} onChange={handleChange} />
+
+      <label htmlFor="resident">Residents:</label>
+      <input type="number" name="resident" id="resident" value={formData.resident} onChange={handleChange} />
+
+      <label htmlFor="size">Size:</label>
+      <input type="number" name="size" id="size" value={formData.size} onChange={handleChange} />
+
+      <label htmlFor="minStay">Minimum Stay (In Days):</label>
+      <input type="number" name="minStay" id="minStay" value={formData.minStay} onChange={handleChange} />
+
+      <label htmlFor="price">Price:</label>
+      <input type="number" name="price" id="price" value={formData.price} onChange={handleChange} />
+
+      <label htmlFor="amenities">Amenities (comma-separated):</label>
+      <input
+        type="text"
+        name="amenities"
+        id="amenities"
+        value={formData.amenities.join(',')}
+        onChange={handleAmenitiesChange}
+      />
+
+      <label htmlFor="city">City:</label>
+      <select name="city" id="city" value={formData.city} onChange={(e) => handleCityChange(e.target.value, e.target.selectedIndex)}>
+        <option value="">Select a city</option>
+        {cities.map((city) => (
+          <option key={city.id} value={city.name}>
+            {city.name}
+          </option>
+        ))}
+      </select>
+
+
+      <label htmlFor="country">Country:</label>
+      <input type="text" name="country" id="country" value={formData.country} onChange={handleChange} />
+
+      <label htmlFor="area">Area:</label>
+      <input type="text" name="area" id="area" value={formData.area} onChange={handleChange} />
+
+      <label htmlFor="locationDescription">Location Description:</label>
+      <textarea
+        name="locationDescription"
+        id="locationDescription"
+        value={formData.locationDescription}
+        onChange={handleChange}
+      />
+
+      <label htmlFor="threeTour">3D Tour:</label>
+      <input type="file" name="threeTour" id="threeTour" onChange={handleChange} />
+
+      <label htmlFor="floorPlan">Floor Plan:</label>
+      <input type="file" name="floorPlan" id="floorPlan" onChange={handleChange} />
+
+      <label htmlFor="ttkVideo">TTK Video:</label>
+      <input type="file" name="ttkVideo" id="ttkVideo" onChange={handleChange} />
+
+
+      <label htmlFor="ttkMessage">TTK Message:</label>
+      <input type="text" name="ttkMessage" id="ttkMessage" value={formData.ttkMessage} onChange={handleChange} />
+
+      <label htmlFor="universityAssociated">Associated Universities:</label>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+        {universities.map((university) => (
+          <div key={university.id} style={{ display: 'flex', alignItems: 'center' }}>
+            <input
+              type="checkbox"
+              id={`university-${university.id}`}
+              name="universityAssociated"
+              value={university.name}
+              checked={formData.universityAssociated.includes(university.name)}
+              onChange={handleUniversityAssociatedChange}
+              style={{ marginRight: '8px' }}
+            />
+            <label htmlFor={`university-${university.id}`}>{university.name}</label>
+          </div>
+        ))}
+      </div>
+
+      <label htmlFor="serviceFee">Service Fee:</label>
+      <input type="text" name="serviceFee" id="serviceFee" value={formData.serviceFee} onChange={handleChange} />
+
+      <label htmlFor="longitude">Longitude:</label>
+      <input type="number" name="longitude" id="longitude" value={formData.longitude} onChange={handleChange} />
+
+      <label htmlFor="latitude">Latitude:</label>
+      <input type="number" name="latitude" id="latitude" value={formData.latitude} onChange={handleChange} />
+
+      <button type="submit">Submit</button>
+    </form>
+  );
+};
+
+export default PropertyForm;

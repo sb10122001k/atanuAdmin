@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import Minus from "./../../assets/images/minus.jpg";
 import Plus from "./../../assets/images/plus.png";
+import { base_url } from "../../constant";
+import axios from "axios";
+import { Images } from "react-bootstrap-icons";
 
 const CityForm = () => {
   const initialFormData = {
@@ -8,11 +11,15 @@ const CityForm = () => {
     country: "",
     about: "",
     images: [], // Store file paths instead of files
-    documents: [{ dname: "", description: "" }], // Store an array of documents
+    documents: [{ name: "", description: "" }], // Store an array of documents
   };
+
+
   const [formData, setFormData] = useState(initialFormData);
   const [formErrors, setFormErrors] = useState({});
 
+
+  console.log(formData , "aaaaa")
   const validateForm = () => {
     let errors = {};
     let isValid = true;
@@ -38,13 +45,13 @@ const CityForm = () => {
 
   const handleChange = (e, index) => {
     const { name, value } = e.target;
-    console.log(name, value);
-    if (name === "name" || name === "country" || name === "about") {
+      if (index!==0 && !index &&  name === "name" || name === "country" || name === "about") {
       setFormData({
         ...formData,
         [name]: value,
       });
-    } else {
+    } 
+    else {
       const updatedDocuments = [...formData.documents];
       updatedDocuments[index][name] = value;
       setFormData({
@@ -57,7 +64,7 @@ const CityForm = () => {
   const handleAddDocument = () => {
     setFormData({
       ...formData,
-      documents: [...formData.documents, { dname: "", description: "" }],
+      documents: [...formData.documents, { name: "", description: "" }],
     });
   };
   const handleDeleteDocument = (index) => {
@@ -74,19 +81,58 @@ const CityForm = () => {
     const paths = files.map((file) => URL.createObjectURL(file)); // Get file paths
     setFormData((prevState) => ({
       ...prevState,
-      images: [...prevState.images, ...paths], // Append new paths to existing ones
+      images: [...prevState.images, ...files], // Append new files to existing ones
     }));
   };
+  
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      // Handle form submission, you can send formData to backend or perform any other actions here
-      console.log(formData);
-      // Reset form after successful submission
-      setFormData(initialFormData);
+        console.log(formData);
     }
-  };
+
+    const accessToken = localStorage.getItem('x-access-token');
+    const refreshToken = localStorage.getItem('x-refresh-token');
+
+    const formDataToSend = new FormData();
+
+    // Append form data fields
+    formDataToSend.append('name', formData.name);
+    formDataToSend.append('country', formData.country);
+    formDataToSend.append('about', formData.about);
+
+    // const images =[]
+    // Append images
+    formData.images.map((image, index) => {
+      formDataToSend.append('images', image);
+    });
+    // formDataToSend.append('images',formData.images)
+
+    // Append documents
+    const documentsJson = JSON.stringify(formData.documents);
+    formDataToSend.append('documents', documentsJson);
+    console.log(formDataToSend)
+    try {
+        const response = await axios.post(`${base_url}/city`, formDataToSend, {
+            headers: {
+                'x-access-token': accessToken,
+                'x-refresh-token': refreshToken,
+                'Content-Type': 'multipart/form-data' 
+            }
+        });
+        
+
+        console.log('Form data sent successfully:', response.data);
+            setFormData(initialFormData);
+
+    } catch (error) {
+        console.error('Error sending form data:', error);
+    }
+
+};
+
+  
 
   const handleClear = () => {
     setFormData(initialFormData); // Reset the form data to initial values
@@ -170,9 +216,9 @@ const CityForm = () => {
                   <input
                     type="text"
                     id={`document_name_${index}`}
-                    name="dname"
+                    name="name"
                     placeholder="Name"
-                    value={doc.dname}
+                    value={doc.name}
                     onChange={(e) => handleChange(e, index)}
                     required
                   />

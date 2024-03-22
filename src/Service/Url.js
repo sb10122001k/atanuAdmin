@@ -1,2 +1,2 @@
-const baseURL = 'https://neokred-backend.moshimoshi.cloud/api/neo'
+const baseURL = 'http://localhost:4014'
 export default baseURL

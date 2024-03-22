@@ -19,7 +19,10 @@ import Booking from "./pages/Booking/booking";
 import City from "./pages/City/city";
 import University from "./pages/University/university";
 import Property from "./pages/Property/property";
-
+import BookingDetails from "./pages/Booking/bookingDetails";
+import OngoingBookingList from "./pages/Booking/ongoingBookingList";
+import CurrentBookingList from "./pages/Booking/currentBooking";
+import PastBookingList from "./pages/Booking/pastBookingDetails";
 function App() {
   return (
     <BrowserRouter>
@@ -39,14 +42,13 @@ function App() {
         <Route path="/SubscribeList" element={<SubscribeList />} />
 
         <Route path="/booking" element={<Booking />} />
+        <Route path="/bookingDetails" element={<BookingDetails />} />
         <Route path="/city" element={<City />} />
         <Route path="/university" element={<University />} />
         <Route path="/property" element={<Property />} />
-
-
-
-
-
+        <Route path="/ongoingBookings" element={<OngoingBookingList />} />
+        <Route path="/currentBookings" element={<CurrentBookingList />} />
+        <Route path="/pastBookings" element={<PastBookingList />} />
 
 
       </Routes>
