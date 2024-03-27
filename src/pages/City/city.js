@@ -1,59 +1,112 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import FirstNavbar from "../dashboard/FirstNavbar";
 import SideBar from "../dashboard/SideBar";
 import CityForm from "./cityForm";
+import axios from "axios";
+import { base_url } from "../../constant";
+import styled from "styled-components";
+
+const Container = styled.div`
+  display: flex;
+  height: 100vh;
+`;
+
+const SidebarContainer = styled.div`
+  width: 200px;
+  background-color: #f0f0f0;
+  padding: 20px;
+`;
+
+const Content = styled.div`
+  flex: 1;
+  padding: 20px;
+`;
+
+const CardContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-gap: 20px;
+`;
+
+const Card = styled.div`
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  border-radius: 4px;
+`;
+
+const Button = styled.button`
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
 
 const City = () => {
-  const [showForm, setShowForm] = useState(false); // State to manage whether to show the form or not
+  const [showForm, setShowForm] = useState(false);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [cityData, setCityData] = useState([]);
 
-  const [bookingsData, setBookingsData] = useState([
-        { bookingId: 1, cityName: "New York", customerName: "John Doe" },
-    { bookingId: 2, cityName: "London", customerName: "Jane Smith" },
-    { bookingId: 3, cityName: "Paris", customerName: "Michael Johnson" },
-    { bookingId: 4, cityName: "Tokyo", customerName: "Emily Brown" },
-    { bookingId: 5, cityName: "Sydney", customerName: "David Wilson" },
-    { bookingId: 6, cityName: "Berlin", customerName: "Sarah Davis" },
-    { bookingId: 7, cityName: "Rome", customerName: "Alex Harris" },
-    { bookingId: 8, cityName: "Moscow", customerName: "Sophia Martinez" },
-    { bookingId: 9, cityName: "Dubai", customerName: "Matthew Anderson" },
-    { bookingId: 10, cityName: "Beijing", customerName: "Olivia Taylor" },
-  ]);
+  const getCityData = async () => {
+    try {
+      const res = await axios.get(`${base_url}/city`);
+      console.log(res?.data?.data, "Data");
+      setCityData(res?.data?.data);
+    } catch (error) {
+      console.log(error, "Error");
+    }
+  };
 
-  // Mapping function to render booking cards
-  const renderBookingCards = () => {
-    return bookingsData.map((booking) => (
-      <div key={booking.bookingId} className="booking-card">
-        <h3>Booking ID: {booking.bookingId}</h3>
-        <p>City: {booking.cityName}</p>
-        <p>Customer: {booking.customerName}</p>
-      </div>
+  useEffect(() => {
+    getCityData();
+  }, []);
+
+  const toggleFormVisibility = (city = null) => {
+    setSelectedCity(city);
+    setShowForm(!showForm);
+  };
+
+  const renderCityCards = () => {
+    return cityData.map((city) => (
+      <Card key={city.id}>
+        <h3>{city.name}</h3>
+        <p>Country: {city.country}</p>
+        <p>About: {city.about}</p>
+        <Button onClick={() => toggleFormVisibility(city)}>Edit</Button>
+      </Card>
     ));
   };
 
-  // Function to toggle the visibility of the form
-  const toggleFormVisibility = () => {
-    setShowForm(!showForm);
-  };
-  
- 
-
   return (
-    <div>
-      <div className="sidebar">
+    <Container>
+      <SidebarContainer>
         <SideBar />
-      </div>
-      <div className="content">
-        <div className="container">
-          <FirstNavbar />
-          <button className="Add_city" onClick={toggleFormVisibility}>
-            Add City
-          </button>
-          {/* Conditional rendering of the form */}
-          {showForm && <CityForm />}
-          <div className="booking-cards-container">{renderBookingCards()}</div>
-        </div>
-      </div>
-    </div>
+      </SidebarContainer>
+      <Content>
+        <FirstNavbar />
+        <Button onClick={() => toggleFormVisibility()}>Add City</Button>
+        {showForm && (
+          <CityForm
+            initialData={
+              selectedCity
+                ? {
+                    ...selectedCity,
+                    documents: selectedCity.documentNeeded,
+                  }
+                : null
+            }
+          />
+        )}
+        <CardContainer>{renderCityCards()}</CardContainer>
+      </Content>
+    </Container>
   );
 };
 

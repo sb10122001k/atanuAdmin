@@ -76,7 +76,7 @@ const Login = () => {
           // console.log(response?.data.user.email)  
         } 
 
-        navigate('/dashboard');
+        navigate('/booking');
         
         // alert('Loged in')
       } catch (error) {

@@ -1,61 +1,105 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from "react";
 import FirstNavbar from "../dashboard/FirstNavbar";
 import SideBar from "../dashboard/SideBar";
-import PropertyForm from './propertyForm';
+import PropertyForm from "./propertyForm";
+import axios from "axios";
+import { base_url } from "../../constant";
+import styled from "styled-components";
+
+const Container = styled.div`
+  display: flex;
+  height: 100vh;
+`;
+
+const SidebarContainer = styled.div`
+  width: 200px;
+  background-color: #f0f0f0;
+  padding: 20px;
+`;
+
+const Content = styled.div`
+  flex: 1;
+  padding: 20px;
+`;
+
+const CardContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-gap: 20px;
+`;
+
+const Card = styled.div`
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  border-radius: 4px;
+`;
+
+const Button = styled.button`
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
 
 const Property = () => {
-  const [showForm, setShowForm] = useState(false); // State to manage whether to show the form or not
+  const [showForm, setShowForm] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [propertyData, setPropertyData] = useState([]);
 
-  const [bookingsData, setBookingsData] = useState([
-        { bookingId: 1, cityName: "New York", customerName: "John Doe" },
-    { bookingId: 2, cityName: "London", customerName: "Jane Smith" },
-    { bookingId: 3, cityName: "Paris", customerName: "Michael Johnson" },
-    { bookingId: 4, cityName: "Tokyo", customerName: "Emily Brown" },
-    { bookingId: 5, cityName: "Sydney", customerName: "David Wilson" },
-    { bookingId: 6, cityName: "Berlin", customerName: "Sarah Davis" },
-    { bookingId: 7, cityName: "Rome", customerName: "Alex Harris" },
-    { bookingId: 8, cityName: "Moscow", customerName: "Sophia Martinez" },
-    { bookingId: 9, cityName: "Dubai", customerName: "Matthew Anderson" },
-    { bookingId: 10, cityName: "Beijing", customerName: "Olivia Taylor" },
-  ]);
+  const getPropertyData = async () => {
+    try {
+      const res = await axios.get(`${base_url}/property`);
+      setPropertyData(res?.data?.data);
+    } catch (error) {
+      console.log(error, "Error");
+    }
+  };
 
-  // Mapping function to render booking cards
-  const renderBookingCards = () => {
-    return bookingsData.map((booking) => (
-      <div key={booking.bookingId} className="booking-card">
-        <h3>Booking ID: {booking.bookingId}</h3>
-        <p>City: {booking.cityName}</p>
-        <p>Customer: {booking.customerName}</p>
-      </div>
+  useEffect(() => {
+    getPropertyData();
+  }, []);
+
+  const toggleFormVisibility = (property = null) => {
+    setSelectedProperty(property);
+    setShowForm(!showForm);
+  };
+
+  const renderPropertyCards = () => {
+    return propertyData.map((property) => (
+      <Card key={property.id}>
+        <h3>{property.name}</h3>
+        <p>Type: {property.type}</p>
+        <p>Building Type: {property.buildingType}</p>
+        <Button onClick={() => toggleFormVisibility(property)}>Edit</Button>
+      </Card>
     ));
   };
 
-  // Function to toggle the visibility of the form
-  const toggleFormVisibility = () => {
-    setShowForm(!showForm);
-  };
-    
-      return (
-        <div>
-          <div className="sidebar">
-            <SideBar />
-          </div>
-          <div className="content">
-            <div className="container">
-              <FirstNavbar />
-              <button className="Add_University" onClick={toggleFormVisibility}>
-              Add Property
-            </button>
-            {/* Conditional rendering of the form */}
-            {showForm && <PropertyForm />}
-              <div className="booking-cards-container">
-                {renderBookingCards()}
-              </div>
-            </div>
-          </div>
-        </div>
-    
-  )
-}
+  return (
+    <Container>
+      <SidebarContainer>
+        <SideBar />
+      </SidebarContainer>
+      <Content>
+        <FirstNavbar />
+        <Button onClick={() => toggleFormVisibility()}>Add Property</Button>
+        {showForm && (
+          <PropertyForm
+            initialData={selectedProperty}
+          />
+        )}
+        <CardContainer>{renderPropertyCards()}</CardContainer>
+      </Content>
+    </Container>
+  );
+};
 
-export default Property
+export default Property;

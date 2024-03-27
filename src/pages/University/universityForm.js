@@ -2,14 +2,16 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { base_url } from "../../constant";
 
-const UniversityForm = () => {
+const UniversityForm = ({ university = null }) => {
   const initialFormData = {
     images: null,
     name: "",
     country: "",
     city: "",
   };
-  const [univerSityformData, setUniverSityFormData] = useState(initialFormData);
+  const [univerSityformData, setUniverSityFormData] = useState(
+    university || initialFormData
+  );
   const [cityData, setCityData] = useState([]);
 
   const handleChange = (e) => {
@@ -52,31 +54,51 @@ const UniversityForm = () => {
     }
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const accessToken = localStorage.getItem('x-access-token');
-    const refreshToken = localStorage.getItem('x-refresh-token');
+    const accessToken = localStorage.getItem("x-access-token");
+    const refreshToken = localStorage.getItem("x-refresh-token");
 
     const formDataToSend = new FormData();
 
-    formDataToSend.append('name', univerSityformData.name);
-    formDataToSend.append('city', univerSityformData.city);
-    formDataToSend.append('country',univerSityformData.country);
-    formDataToSend.append('logo',univerSityformData.images)
-    try {
-      const response = await axios.post(`${base_url}/university`, formDataToSend, {
-        headers: {
-            'x-access-token': accessToken,
-            'x-refresh-token': refreshToken,
-            'Content-Type': 'multipart/form-data' 
-        }
+    const changedFields = Object.keys(univerSityformData).filter(
+      (key) =>
+        univerSityformData[key] !== (university ? university[key] : initialFormData[key])
+    );
+  
+    changedFields.forEach((field) => {
+      if (field === "images") {
+        formDataToSend.append("logo", univerSityformData[field]);
+      } else {
+        formDataToSend.append(field, univerSityformData[field]);
+      }
     });
-    
 
-    console.log('Form data sent successfully:', response.data);
-        setUniverSityFormData(initialFormData);
+    try {
+      const response = university
+        ? await axios.patch(
+            `${base_url}/university?id=${university.id}`,
+            formDataToSend,
+            {
+              headers: {
+                "x-access-token": accessToken,
+                "x-refresh-token": refreshToken,
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          )
+        : await axios.post(`${base_url}/university`, formDataToSend, {
+            headers: {
+              "x-access-token": accessToken,
+              "x-refresh-token": refreshToken,
+              "Content-Type": "multipart/form-data",
+            },
+          });
+
+      console.log("Form data sent successfully:", response.data);
+      setUniverSityFormData(initialFormData);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
     console.log(univerSityformData);
   };
@@ -87,7 +109,13 @@ const UniversityForm = () => {
 
   useEffect(() => {
     handleGetCityList();
-  }, []);
+    if (university) {
+      setUniverSityFormData({
+        ...university,
+        images: null, // Reset the images field
+      });
+    }
+  }, [university]);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -107,24 +135,28 @@ const UniversityForm = () => {
                 required
               />
             </td>
-       
-          {univerSityformData.images && (
-            <tr>
-              <td></td>
-              <td>
-                <img
-                  src={univerSityformData.images}
-                  alt="Selected Image"
-                  style={{
-                    maxWidth: "140px",
-                    maxHeight: "140px",
-                    margin: "5px",
-                  }}
-                />
-              </td>
-            </tr>
-          )}
-          
+
+            {univerSityformData.images && (
+              <tr>
+                <td></td>
+                <td>
+                  <img
+                    src={
+                      typeof univerSityformData.images === "string"
+                        ? univerSityformData.images
+                        : URL.createObjectURL(univerSityformData.images)
+                    }
+                    alt="Selected Image"
+                    style={{
+                      maxWidth: "140px",
+                      maxHeight: "140px",
+                      margin: "5px",
+                    }}
+                  />
+                </td>
+              </tr>
+            )}
+
             <td>
               <label htmlFor="name">Name:</label>
             </td>
@@ -159,8 +191,7 @@ const UniversityForm = () => {
                 ))}
               </select>
             </td>
-          
-         
+
             <td>
               <label htmlFor="country">Country:</label>
             </td>
@@ -178,11 +209,15 @@ const UniversityForm = () => {
           <tr>
             <td>
               <button className="submit_city" type="submit">
-                Submit
+                {university ? "Update" : "Submit"}
               </button>
             </td>
             <td>
-              <button className="cancel_city" type="button" onClick={handleClear}>
+              <button
+                className="cancel_city"
+                type="button"
+                onClick={handleClear}
+              >
                 Cancel
               </button>
             </td>

@@ -1,32 +1,23 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import FirstNavbar from "../dashboard/FirstNavbar";
 import SideBar from "../dashboard/SideBar";
-import CityForm from './../City/cityForm';
 import UniversityForm from './universityForm';
+import { base_url } from '../../constant';
+import axios from 'axios';
 
 const University = () => {
-  const [showForm, setShowForm] = useState(false); // State to manage whether to show the form or not
-
-  const [bookingsData, setBookingsData] = useState([
-        { bookingId: 1, cityName: "New York", customerName: "John Doe" },
-    { bookingId: 2, cityName: "London", customerName: "Jane Smith" },
-    { bookingId: 3, cityName: "Paris", customerName: "Michael Johnson" },
-    { bookingId: 4, cityName: "Tokyo", customerName: "Emily Brown" },
-    { bookingId: 5, cityName: "Sydney", customerName: "David Wilson" },
-    { bookingId: 6, cityName: "Berlin", customerName: "Sarah Davis" },
-    { bookingId: 7, cityName: "Rome", customerName: "Alex Harris" },
-    { bookingId: 8, cityName: "Moscow", customerName: "Sophia Martinez" },
-    { bookingId: 9, cityName: "Dubai", customerName: "Matthew Anderson" },
-    { bookingId: 10, cityName: "Beijing", customerName: "Olivia Taylor" },
-  ]);
+  const [showForm, setShowForm] = useState(false);
+  const [universityData, setUniversityData] = useState([]);
+  const [editingUniversity, setEditingUniversity] = useState(null);
 
   // Mapping function to render booking cards
   const renderBookingCards = () => {
-    return bookingsData.map((booking) => (
-      <div key={booking.bookingId} className="booking-card">
-        <h3>Booking ID: {booking.bookingId}</h3>
-        <p>City: {booking.cityName}</p>
-        <p>Customer: {booking.customerName}</p>
+    return universityData.map((university) => (
+      <div key={university.id} className="booking-card">
+        <h3>Name: {university.name}</h3>
+        <p>City: {university.city}</p>
+        <p>Country: {university.country}</p>
+        <button onClick={() => handleEditUniversity(university)}>Edit</button>
       </div>
     ));
   };
@@ -34,28 +25,51 @@ const University = () => {
   // Function to toggle the visibility of the form
   const toggleFormVisibility = () => {
     setShowForm(!showForm);
+    setEditingUniversity(null);
   };
-    
-      return (
-        <div>
-          <div className="sidebar">
-            <SideBar />
-          </div>
-          <div className="content">
-            <div className="container">
-              <FirstNavbar />
-              <button className="Add_University" onClick={toggleFormVisibility}>
-              Add University
-            </button>
-            {/* Conditional rendering of the form */}
-            {showForm && <UniversityForm />}
-              <div className="booking-cards-container">
-                {renderBookingCards()}
-              </div>
-            </div>
+
+  const getUniversityData = async () => {
+    try {
+      const res = await axios.get(`${base_url}/university`)
+      setUniversityData(res?.data?.data)
+    } catch (error) {
+      console.log(error?.response)
+    }
+  }
+
+  const handleEditUniversity = (university) => {
+    setEditingUniversity(university);
+    setShowForm(true);
+  };
+
+  useEffect(() => {
+    getUniversityData();
+  }, [])
+
+  return (
+    <div>
+      <div className="sidebar">
+        <SideBar />
+      </div>
+      <div className="content">
+        <div className="container">
+          <FirstNavbar />
+          <button className="Add_University" onClick={toggleFormVisibility}>
+            {editingUniversity ? 'Cancel' : 'Add University'}
+          </button>
+          {/* Conditional rendering of the form */}
+          {showForm && (
+            <UniversityForm
+              university={editingUniversity}
+              onSubmitSuccess={getUniversityData}
+            />
+          )}
+          <div className="booking-cards-container">
+            {renderBookingCards()}
           </div>
         </div>
-    
+      </div>
+    </div>
   )
 }
 

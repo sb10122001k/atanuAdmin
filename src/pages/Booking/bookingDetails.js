@@ -91,6 +91,26 @@ const BookingDetails = () => {
     }
   };
 
+  const handleUpdateBooking = async()=>{
+    try {
+      const accessToken = localStorage.getItem('x-access-token');
+      const refreshToken = localStorage.getItem('x-refresh-token');
+      console.log(confirmBookingData)
+      confirmBookingData.booking = id
+      console.log(confirmBookingData,"Data")
+      const response = await axios.post(`${base_url}/booking/updateCurrentBooking`, confirmBookingData, {
+        headers: {
+          'x-access-token': accessToken,
+          'x-refresh-token': refreshToken,
+        },
+      });
+      alert('Successfully Updated Booking');
+      console.log(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   const handleOfflinePaymentRefund = async (payment, index) => {
     try {
       console.log(refundAmount[index], "Refund Amount")
@@ -151,6 +171,11 @@ const BookingDetails = () => {
                 {bookingData.booking_status == 'service_fee_paid' && (
                   <Col>
                     <Button onClick={handleConfirmBooking}>Confirm Booking</Button>
+                  </Col>
+                )}
+                {bookingData.booking_status == 'booked' && (
+                  <Col>
+                    <Button onClick={handleUpdateBooking}>Update Booking</Button>
                   </Col>
                 )}
               </Row>
